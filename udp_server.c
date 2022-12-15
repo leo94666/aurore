@@ -41,7 +41,13 @@ int main(int argc, char **argv) {
 
     //开启循环，接收客户端消息
     while (1) {
-        int n = recvfrom(socket_fd, buf, sizeof(buf), 0, (struct sockaddr *) &server_addr, &client_len);
-        send(socket_fd, buf, sizeof(buf), n);
+        client_len = sizeof(client_addr);
+        ret = recvfrom(socket_fd, buf, sizeof(buf), 0, (struct sockaddr *) &client_addr, &client_len);
+        if (ret < 0) {
+            close(socket_fd);
+            break;
+        }
+        printf("client#: %s", buf);
+        sendto(socket_fd, buf, sizeof(buf), 0, (struct sockaddr *) &client_addr, client_len);
     }
 }
