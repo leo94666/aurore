@@ -1,63 +1,87 @@
 
-
-#include "sys/socket.h"
+#include <arpa/inet.h>
 #include <errno.h>
-#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 #include <unistd.h>
 
-// https://blog.csdn.net/YanPan12/article/details/121468798
-
 int main(int argc, char **argv) {
+  char *ip="127.0.0.1";
 
-  // 1.创建临时变量
-  char *ip = "127.0.0.1";
-  int port = 7890;
+  int port = 3456;
   struct sockaddr_in server_addr;
+
   struct sockaddr_in client_addr;
   int client_len;
+  int socket_fd;
+  int ret;
   char buf[1024];
-  int ret = -1;
 
-  // 2.创建socket描述符
-  int listen_fd = socket(AF_INET, SOCK_STREAM, 0);
-  if (listen_fd < 0) {
-    printf("create a tcp socket fd failure: [%s]\n", strerror(listen_fd));
+  socket_fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+  if (socket_fd < 0) {
+    printf("create a tcp socket fd failure: [%s]\n", strerror(socket_fd));
     return -1;
   }
-  printf("create a tcp socket fd[%d] success.\n", listen_fd);
+  printf("create a tcp socket fd[%d] success.\n", socket_fd);
 
   memset(&server_addr, 0, sizeof(server_addr));
   server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htonl(port);
+  server_addr.sin_port = htons(port);
   server_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  ret = bind(listen_fd, &server_addr, sizeof(server_addr));
+  server_addr.sin_addr.s_addr=inet_addr(ip);
+
+  ret = bind(socket_fd, (struct sockaddr *)&server_addr, sizeof(server_addr));
   if (ret < 0) {
-    printf("socket fd[%d] bind on port[%d] for ip address failure.%s\n",
-           listen_fd, port, strerror(listen_fd));
+    printf("socket fd[%d] bind on port[%d] for ip address failure. %d\n",
+           socket_fd, port, ret);
     return -1;
   }
-  printf("socket fd[%d] bind on port[%d] for ip address success.\n", listen_fd,
+  printf("socket fd[%d] bind on port[%d] for ip address success.\n", socket_fd,
          port);
-  listen(listen_fd, 13);
+
+  if (listen(socket_fd, 5) < 0) {
+    printf("socket fd[%d] listened on port[%d] for ip address failure. %s\n",
+           socket_fd, port, strerror(socket_fd));
+    return -1;
+  }
+  printf("socket fd[%d] listened on port[%d] for ip address success.\n",
+         socket_fd, port);
+
+
 
   while (1) {
-    int client_fd = accept(listen_fd, &client_addr, &client_len);
+    client_len = sizeof(&client_addr);
+    int client_fd =
+        accept(socket_fd, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0) {
+      perror("can't bind local address");
+      close(client_fd);
       return -1;
     }
-    memset(&server_addr, 0, sizeof(buf));
-    ret = read(client_fd, buf, sizeof(buf));
-    printf("%s", buf);
-    if (ret < 0) {
-      close(listen_fd);
-      continue;
-    }
-    ret = write(client_fd, buf, ret);
-    if (ret < 0) {
-      close(listen_fd);
+
+    while (1) {
+      memset(buf, 0, sizeof(buf));
+
+      ret = recv(client_fd, buf, sizeof(buf), 0);
+      if (ret <= 0) {
+        printf("read data from socket[%d] failure: %s\n", client_fd,
+               strerror(errno));
+        break ;
+      }
+      printf("read %d data from server client [%d] and echo it back:%s",
+             ret, client_fd, buf);
+
+      ret = send(client_fd, buf, ret, 0);
+      if (ret < 0) {
+        printf("write %d bytes data back to client[%d] failure:%s\n", ret,
+               client_fd, strerror(errno));
+         close(client_fd);
+      }
+      printf("write %d bytes data back to client[%d] success:%s\n", ret,
+             client_fd, strerror(errno));
     }
   }
-  return 0;
 }
