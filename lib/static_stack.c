@@ -50,11 +50,12 @@ bool static_stack_push(stack_obj_t *obj, const stack_item_t *node)
     
     if (obj->stack_size < stack->stack_capacity)
     {
-        int pos = (stack->top + obj->stack_size) % stack->stack_capacity;
+        int pos = (stack->top) % stack->stack_capacity;
         char *dest = stack->array + (obj->item_size * pos);
 
         memcpy(dest, node, obj->item_size);
         obj->stack_size++;
+        stack->top++;
         ret = true;
     }
 
@@ -67,7 +68,7 @@ void static_stack_pop(stack_obj_t *obj)
     
     if ((obj->stack_size > 0))
     {
-        stack->top = (stack->top + 1) % stack->stack_capacity;
+        stack->top = (stack->top - 1) % stack->stack_capacity;
         obj->stack_size--;
     }
 }
@@ -79,7 +80,7 @@ bool static_stack_top(stack_obj_t *obj, stack_item_t *node)
 
     if ((obj->stack_size > 0))
     {
-        char *dest = stack->array + (obj->item_size * stack->top);
+        char *dest = stack->array + (obj->item_size * (stack->top - 1));
         memcpy(node, dest, obj->item_size);
         ret = true;
     }

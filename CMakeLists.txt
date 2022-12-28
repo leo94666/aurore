@@ -5,7 +5,7 @@ project(aurore LANGUAGES C VERSION 1.0.0)
 include_directories(include)
 
 
-aux_source_directory(src SRC)
+aux_source_directory(lib SRC)
 
 
 add_definitions(-DLOG_USE_COLOR)
