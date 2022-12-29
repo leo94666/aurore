@@ -4,6 +4,8 @@
 
 typedef void queue_item_t;
 
+/********************************* queue_constructor_args_t ***************************************/
+
 #define QUEUE_CONSTRUCTOR_ARGS_MEMBERS int *item_size;
 
 
@@ -11,6 +13,7 @@ typedef struct{
     int *item_size;
 } queue_constructor_args_t;
 
+/************************************ queue_list_obj_t *******************************************/
 
 #define QUEUE_OBJ_MEMBER OBJ_MEMBER int item_size; int queue_length;
 
