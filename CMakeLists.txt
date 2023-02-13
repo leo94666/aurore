@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 
 include_directories(inc)
-include_directories(include)
+#include_directories(include)
 
 
 aux_source_directory(lib SRC)
