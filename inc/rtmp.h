@@ -6,6 +6,8 @@
 #define AURORE_RTMP_H
 
 #include <cstring>
+#include <cstdint>
+#include <string>
 
 using namespace std;
 
